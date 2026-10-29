@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Race rival coders by typing real code in Python, JavaScript, Java, C#, C++ and Go.">
+<title>Syntax Sprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: one race column — controls, track lanes, syntax note, code "tarmac", results, progress board.
+   Single dark look by choice: a night-race pit wall in a code editor. */
+:root {
+  color-scheme: dark;
+  --bg: #0e1418;
+  --panel: #151d23;
+  --panel-2: #1b252d;
+  --line: #263440;
+  --fg: #dbe4ea;
+  --muted: #8396a3;
+  --accent: #ffb020;
+  --accent-ink: #1a1200;
+  --good: #4fd1a5;
+  --bad: #ff5d6c;
+  --bad-bg: rgba(255, 93, 108, .32);
+  --cur-bg: rgba(255, 176, 32, .2);
+  --syn-kw: #f191d3;
+  --syn-str: #a3d97c;
+  --syn-num: #f7c46c;
+  --syn-fn: #7fc9ff;
+  --syn-type: #5fe0cf;
+  --syn-com: #6f818d;
+  --syn-plain: #d6dee4;
+  --f-display: "Chakra Petch", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-code: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.logo {
+  font-family: var(--f-code); font-weight: 600; font-size: 18px;
+  width: 44px; height: 44px; display: grid; place-items: center;
+  background: var(--accent); color: var(--accent-ink); border-radius: 6px;
+  transform: skewX(-8deg);
+}
+h1 {
+  font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 5vw, 38px);
+  letter-spacing: .01em; line-height: 1; margin: 0; text-transform: uppercase; font-style: italic;
+}
+.tagline { color: var(--muted); margin: 4px 0 0; max-width: 52ch; text-wrap: balance; }
+.hint-keys { color: var(--muted); font-size: 13px; }
+kbd {
+  font-family: var(--f-code); font-size: 12px; padding: 1px 6px; border-radius: 4px;
+  border: 1px solid var(--line); background: var(--panel-2); color: var(--fg);
+}
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; }
+.langs { display: flex; flex-wrap: wrap; gap: 6px; }
+.lang-btn {
+  font-family: var(--f-display); font-weight: 600; font-size: 14px; letter-spacing: .04em;
+  padding: 7px 14px; border-radius: 4px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--muted); cursor: pointer;
+}
+.lang-btn:hover { color: var(--fg); border-color: var(--muted); }
+.lang-btn[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.field { display: flex; align-items: center; gap: 8px; }
+.field label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+select {
+  font-family: var(--f-body); font-size: 14px; color: var(--fg); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px; max-width: 100%;
+}
+button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Track */
+.track { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px 10px; }
+.track-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+.track-title { font-family: var(--f-display); font-weight: 600; letter-spacing: .1em; text-transform: uppercase; font-size: 13px; color: var(--muted); }
+.track-title b { color: var(--fg); }
+.lights { display: flex; gap: 6px; align-items: center; }
+.light { width: 14px; height: 14px; border-radius: 50%; background: #2a3640; border: 1px solid #34444f; }
+.light.red { background: var(--bad); box-shadow: 0 0 10px var(--bad); border-color: var(--bad); }
+.light.green { background: var(--good); box-shadow: 0 0 10px var(--good); border-color: var(--good); }
+.lights-label { font-family: var(--f-display); font-weight: 700; font-size: 13px; letter-spacing: .12em; margin-left: 6px; min-width: 3ch; }
+.lane { display: grid; grid-template-columns: 92px 1fr 64px; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px dashed var(--line); }
+.lane:first-of-type { border-top: 0; }
+.lane-name { font-family: var(--f-display); font-weight: 600; font-size: 13px; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lane-name small { display: block; color: var(--muted); font-weight: 500; font-size: 11px; letter-spacing: .08em; }
+.road { position: relative; height: 28px; min-width: 0; }
+.road::before { content: ""; position: absolute; left: 0; right: 14px; top: 50%; border-top: 2px dashed #2f3e49; }
+.road::after {
+  content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 10px;
+  background: repeating-conic-gradient(var(--fg) 0 25%, var(--bg) 0 50%) 0 0 / 10px 10px;
+  border-radius: 2px; opacity: .8;
+}
+.car {
+  position: absolute; top: 3px; left: 0; height: 22px; padding: 0 8px 0 6px;
+  display: flex; align-items: center; gap: 5px;
+  font-family: var(--f-code); font-size: 11px; font-weight: 600;
+  background: var(--panel-2); color: var(--fg); border: 1px solid var(--line);
+  border-radius: 3px 11px 11px 3px; white-space: nowrap; will-change: transform;
+}
+.car::before { content: ""; width: 4px; height: 12px; background: var(--muted); border-radius: 1px; }
+.car.you { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.car.you::before { background: var(--accent-ink); }
+.lane-wpm { font-family: var(--f-code); font-size: 12px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Note */
+.note { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: start; padding: 12px 16px; border-left: 3px solid var(--syn-type); background: var(--panel); border-radius: 0 6px 6px 0; }
+.note-tag { font-family: var(--f-display); font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--syn-type); padding-top: 2px; white-space: nowrap; }
+.note p { margin: 0; max-width: 72ch; min-width: 0; }
+.note code { font-family: var(--f-code); font-size: .9em; background: var(--panel-2); border: 1px solid var(--line); padding: 0 5px; border-radius: 3px; color: var(--syn-type); }
+
+/* Code */
+.editor { position: relative; background: #0b1014; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; cursor: text; }
+.editor.focused { border-color: #3c5160; }
+.editor-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 14px; border-bottom: 1px solid var(--line); background: var(--panel); font-size: 12px; color: var(--muted); }
+.file { font-family: var(--f-code); color: var(--fg); }
+.code-body { display: flex; overflow-x: auto; }
+.gutter, .code { font-family: var(--f-code); font-size: 16px; line-height: 1.75; margin: 0; padding: 16px 0; white-space: pre; }
+.gutter { color: #3d4f5b; text-align: right; padding-left: 14px; padding-right: 14px; user-select: none; border-right: 1px solid #1a242b; font-variant-numeric: tabular-nums; }
+.code { padding-left: 16px; padding-right: 24px; flex: 1; min-width: 0; }
+.c { opacity: .42; border-radius: 2px; }
+.c.ok { opacity: 1; }
+.c.ind { opacity: .2; }
+.c.ok.ind { opacity: .2; }
+.c.bad { opacity: 1; background: var(--bad-bg); color: #fff; }
+.c.nl { color: var(--syn-com); opacity: .25; }
+.c.nl.ok { opacity: .35; }
+.c.nl.bad { opacity: 1; color: #fff; }
+.c.cur { opacity: 1; background: var(--cur-bg); box-shadow: inset 0 -3px 0 var(--accent); animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { 50% { box-shadow: inset 0 -3px 0 transparent; } }
+.t-kw { color: var(--syn-kw); }
+.t-str { color: var(--syn-str); }
+.t-num { color: var(--syn-num); }
+.t-fn { color: var(--syn-fn); }
+.t-type { color: var(--syn-type); }
+.t-com { color: var(--syn-com); font-style: italic; }
+.t-p { color: var(--syn-plain); }
+.editor.shake { animation: shake .25s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+#ghost { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; resize: none; }
+.veil {
+  position: absolute; inset: 41px 0 0 0; display: grid; place-items: center;
+  background: rgba(11, 16, 20, .72); font-family: var(--f-display); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: 14px;
+}
+.start-btn, .btn {
+  font-family: var(--f-display); font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  border-radius: 4px; cursor: pointer; border: 1px solid var(--line);
+}
+.start-btn { font-size: 18px; padding: 12px 28px; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); transform: skewX(-8deg); }
+.start-btn span { display: inline-block; transform: skewX(8deg); }
+.veil-inner { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 0 16px; }
+.veil-inner small { font-family: var(--f-body); text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 400; font-size: 13px; }
+
+/* Stats */
+.stats { display: flex; flex-wrap: wrap; gap: 8px 28px; padding: 2px 2px; }
+.stat { display: flex; align-items: baseline; gap: 8px; }
+.stat b { font-family: var(--f-code); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+/* Results */
+.results { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; justify-content: space-between; }
+.place { font-family: var(--f-display); font-weight: 700; font-style: italic; text-transform: uppercase; font-size: 34px; line-height: 1; }
+.place.p1 { color: var(--accent); }
+.place small { display: block; font-style: normal; font-size: 12px; letter-spacing: .12em; color: var(--muted); margin-top: 6px; font-weight: 600; }
+.pb { color: var(--good); }
+.res-nums { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.res-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { font-size: 14px; padding: 10px 16px; background: var(--panel-2); color: var(--fg); }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+/* Board */
+.board h2 { font-family: var(--f-display); font-size: 15px; letter-spacing: .12em; text-transform: uppercase; margin: 8px 0 4px; font-weight: 700; }
+.board p { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+.board-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 680px; font-variant-numeric: tabular-nums; }
+th, td { padding: 0; text-align: center; border-bottom: 1px solid var(--line); }
+tr:last-child td, tr:last-child th { border-bottom: 0; }
+thead th { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 9px 6px; font-weight: 600; }
+tbody th { text-align: left; padding: 0 12px; font-family: var(--f-display); font-weight: 600; font-size: 13px; white-space: nowrap; }
+.cell { width: 100%; padding: 9px 4px; background: none; border: 0; color: var(--muted); font-family: var(--f-code); font-size: 13px; cursor: pointer; }
+.cell:hover { background: var(--panel-2); color: var(--fg); }
+.cell.done { color: var(--good); }
+.cell.here { background: var(--cur-bg); color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+@media (max-width: 560px) {
+  .lane { grid-template-columns: 64px 1fr 44px; gap: 6px; }
+  .lane-name small { display: none; }
+  .gutter, .code { font-size: 14px; }
+  .note { grid-template-columns: 1fr; }
+  .place { font-size: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .c.cur { animation: none; }
+  .editor.shake { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true">{›}</div>
+      <div>
+        <h1>Syntax Sprint</h1>
+        <p class="tagline">Race three coders by typing real code. Every lap teaches one piece of syntax in a new language.</p>
+      </div>
+    </div>
+    <div class="hint-keys"><kbd>Enter</kbd> start / next &nbsp; <kbd>Tab</kbd> fill indent &nbsp; <kbd>Esc</kbd> restart</div>
+  </header>
+
+  <div class="controls">
+    <div class="langs" id="langs" role="group" aria-label="Language"></div>
+    <div class="field"><label for="topic">Lesson</label><select id="topic"></select></div>
+    <div class="field"><label for="diff">Rivals</label>
+      <select id="diff">
+        <option value="0">Warm-up · 15–35 wpm</option>
+        <option value="1" selected>Standard · 30–60 wpm</option>
+        <option value="2">Pro · 50–90 wpm</option>
+      </select>
+    </div>
+  </div>
+
+  <section class="track" aria-label="Race track">
+    <div class="track-head">
+      <div class="track-title" id="trackTitle"></div>
+      <div class="lights" aria-live="polite">
+        <span class="light" id="l1"></span><span class="light" id="l2"></span><span class="light" id="l3"></span>
+        <span class="lights-label" id="lightsLabel">READY</span>
+      </div>
+    </div>
+    <div id="lanes"></div>
+  </section>
+
+  <div class="note">
+    <div class="note-tag">Syntax note</div>
+    <p id="tip"></p>
+  </div>
+
+  <section class="editor" id="editor" aria-label="Code to type">
+    <div class="editor-bar"><span class="file" id="fileName"></span><span id="editorHint">Type exactly what you see. Indentation fills itself after Enter.</span></div>
+    <div class="code-body" id="codeBody">
+      <pre class="gutter" id="gutter" aria-hidden="true"></pre>
+      <pre class="code" id="code"></pre>
+    </div>
+    <textarea id="ghost" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Typing input"></textarea>
+    <div class="veil" id="veil">
+      <div class="veil-inner">
+        <button class="start-btn" id="startBtn"><span>Start race</span></button>
+        <small>or press Enter</small>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="stat"><b id="sWpm">0</b><span>wpm</span></div>
+    <div class="stat"><b id="sAcc">100%</b><span>accuracy</span></div>
+    <div class="stat"><b id="sTime">0.0s</b><span>time</span></div>
+    <div class="stat"><b id="sErr">0</b><span>typos</span></div>
+    <div class="stat"><b id="sBest">—</b><span>your best here</span></div>
+  </div>
+
+  <section class="results" id="results" hidden>
+    <div class="place" id="place"></div>
+    <div class="res-nums">
+      <div class="stat"><b id="rWpm"></b><span>wpm</span></div>
+      <div class="stat"><b id="rAcc"></b><span>accuracy</span></div>
+      <div class="stat"><b id="rTime"></b><span>time</span></div>
+    </div>
+    <div class="res-actions">
+      <button class="btn" id="retryBtn">Race again</button>
+      <button class="btn primary" id="nextBtn">Next lesson</button>
+    </div>
+  </section>
+
+  <section class="board">
+    <h2>Progress board</h2>
+    <p>Your best WPM for every language and lesson. Pick any cell to jump to it.</p>
+    <div class="board-scroll"><table id="board"></table></div>
+  </section>
+</div>
+
+<script type="text/plain" id="snippets">
+@@ python variables
+?? Python figures out types at runtime. Type hints like `: str` are optional but help editors catch bugs. `f"..."` strings drop values into text with `{}`.
+name: str = "Ada"
+age: int = 36
+height = 1.68
+is_admin = False
+print(f"{name} is {age} years old")
+@@ python conditionals
+?? Python uses a colon and indentation instead of braces, and `elif` for else-if chains.
+score = 87
+if score >= 90:
+    grade = "A"
+elif score >= 80:
+    grade = "B"
+else:
+    grade = "C"
+print(grade)
+@@ python loops
+?? `for` walks over any iterable. `range(3)` counts 0, 1, 2 and `enumerate` gives you the index and the value together.
+for i in range(3):
+    print(i)
+
+fruits = ["apple", "kiwi", "plum"]
+for index, fruit in enumerate(fruits):
+    print(index, fruit)
+@@ python functions
+?? `def` defines a function. Default values follow `=`, and `->` annotates the return type.
+def greet(name: str, greeting: str = "Hello") -> str:
+    return f"{greeting}, {name}!"
+
+message = greet("Grace")
+print(message)
+@@ python classes
+?? `__init__` is the constructor, and `self` is the instance. Every method takes `self` as its first parameter.
+class Account:
+    def __init__(self, owner, balance=0):
+        self.owner = owner
+        self.balance = balance
+
+    def deposit(self, amount):
+        self.balance += amount
+        return self.balance
+@@ python collections
+?? Lists use `[]` and dicts use `{key: value}`. A list comprehension `[x for x in items if ...]` builds a new list in one line.
+nums = [3, 1, 4, 1, 5]
+squares = [n * n for n in nums if n > 1]
+ages = {"ada": 36, "alan": 41}
+ages["grace"] = 45
+for name, age in ages.items():
+    print(name, age)
+@@ python errors
+?? `try` / `except` catches exceptions by type. `finally` always runs, whether or not something failed.
+try:
+    value = int(input("Number: "))
+    result = 10 / value
+except ValueError:
+    print("Not a number")
+except ZeroDivisionError:
+    print("Can't divide by zero")
+finally:
+    print("Done")
+@@ python lambdas
+?? `lambda args: expr` makes a small unnamed function. `sorted`, `map` and `filter` all accept functions as arguments.
+people = [("Ada", 36), ("Alan", 41), ("Grace", 45)]
+by_age = sorted(people, key=lambda p: p[1], reverse=True)
+names = list(map(lambda p: p[0], by_age))
+over_40 = list(filter(lambda p: p[1] > 40, people))
+@@ javascript variables
+?? Use `const` for values you won't reassign and `let` for ones you will. Template literals use backticks and `${}`.
+const name = "Ada";
+let age = 36;
+age += 1;
+const isAdmin = false;
+console.log(`${name} is ${age} years old`);
+@@ javascript conditionals
+?? Use `===` for strict equality with no type coercion. The ternary `cond ? a : b` is an inline if/else.
+const score = 87;
+let grade;
+if (score >= 90) {
+  grade = "A";
+} else if (score >= 80) {
+  grade = "B";
+} else {
+  grade = "C";
+}
+const passed = score >= 60 ? "yes" : "no";
+@@ javascript loops
+?? The classic `for` loop gives you a counter; `for...of` hands you each value in an array.
+for (let i = 0; i < 3; i++) {
+  console.log(i);
+}
+
+const fruits = ["apple", "kiwi", "plum"];
+for (const fruit of fruits) {
+  console.log(fruit);
+}
+@@ javascript functions
+?? Declare functions with `function`, or write arrow functions `(a, b) => a + b`. Parameters can have default values.
+function greet(name, greeting = "Hello") {
+  return `${greeting}, ${name}!`;
+}
+
+const add = (a, b) => a + b;
+console.log(greet("Grace"), add(2, 3));
+@@ javascript classes
+?? `constructor` runs when you call `new`. Fields that start with `#` are private to the class.
+class Account {
+  #balance = 0;
+
+  constructor(owner) {
+    this.owner = owner;
+  }
+
+  deposit(amount) {
+    this.#balance += amount;
+    return this.#balance;
+  }
+}
+@@ javascript collections
+?? Arrays and objects are the everyday collections. A `Map` keeps insertion order and accepts any type as a key.
+const nums = [3, 1, 4, 1, 5];
+nums.push(9);
+const user = { name: "Ada", age: 36 };
+const ages = new Map();
+ages.set("alan", 41);
+console.log(nums.length, user.name, ages.get("alan"));
+@@ javascript errors
+?? `throw` raises an error and `catch` receives it. `finally` runs either way.
+function parseAge(text) {
+  const age = Number(text);
+  if (Number.isNaN(age)) {
+    throw new Error(`Invalid age: ${text}`);
+  }
+  return age;
+}
+
+try {
+  parseAge("abc");
+} catch (err) {
+  console.error(err.message);
+}
+@@ javascript lambdas
+?? `map` transforms every item, `filter` keeps the matches and `reduce` folds an array into a single value.
+const prices = [12, 40, 7, 25];
+const withTax = prices.map(p => p * 1.08);
+const big = prices.filter(p => p > 10);
+const total = prices.reduce((sum, p) => sum + p, 0);
+@@ java variables
+?? Java is statically typed: the type comes before the name. `var` lets the compiler infer the type of a local variable.
+String name = "Ada";
+int age = 36;
+double height = 1.68;
+boolean isAdmin = false;
+var city = "London";
+System.out.println(name + " is " + age);
+@@ java conditionals
+?? Conditions sit in parentheses and blocks in braces. The ternary `cond ? a : b` picks one of two values.
+int score = 87;
+String grade;
+if (score >= 90) {
+    grade = "A";
+} else if (score >= 80) {
+    grade = "B";
+} else {
+    grade = "C";
+}
+String result = score >= 60 ? "pass" : "fail";
+@@ java loops
+?? The enhanced `for (Type x : items)` loop reads each element. The classic loop uses an index counter.
+for (int i = 0; i < 3; i++) {
+    System.out.println(i);
+}
+
+String[] fruits = {"apple", "kiwi", "plum"};
+for (String fruit : fruits) {
+    System.out.println(fruit);
+}
+@@ java functions
+?? Every method lives inside a class. The return type comes first, and `static` methods belong to the class rather than an object.
+public class MathUtils {
+    public static int add(int a, int b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(add(2, 3));
+    }
+}
+@@ java classes
+?? Fields are usually `private`. The constructor shares the class name, and `this` refers to the current object.
+public class Account {
+    private final String owner;
+    private double balance;
+
+    public Account(String owner) {
+        this.owner = owner;
+    }
+
+    public double deposit(double amount) {
+        balance += amount;
+        return balance;
+    }
+}
+@@ java collections
+?? Collections hold objects, so use wrapper types like `Integer`. Declare with the interface (`List`, `Map`) and build with a class (`ArrayList`, `HashMap`).
+List<Integer> nums = new ArrayList<>();
+nums.add(3);
+nums.add(7);
+Map<String, Integer> ages = new HashMap<>();
+ages.put("ada", 36);
+int adaAge = ages.get("ada");
+System.out.println(nums.size());
+@@ java errors
+?? Catch the most specific exception first. Checked exceptions must be caught or declared with `throws`.
+try {
+    int value = Integer.parseInt("42x");
+    System.out.println(10 / value);
+} catch (NumberFormatException e) {
+    System.out.println("Not a number");
+} catch (ArithmeticException e) {
+    System.out.println("Divide by zero");
+} finally {
+    System.out.println("Done");
+}
+@@ java lambdas
+?? Lambdas `x -> expr` implement one-method interfaces. Streams chain `filter`, `map` and `collect`, and `String::toUpperCase` is a method reference.
+List<String> names = List.of("Ada", "Alan", "Grace");
+List<String> upper = names.stream()
+    .filter(n -> n.length() > 3)
+    .map(String::toUpperCase)
+    .collect(Collectors.toList());
+upper.forEach(n -> System.out.println(n));
+@@ csharp variables
+?? `var` infers the type, `const` fixes a value at compile time, and `$"..."` interpolates values into a string.
+string name = "Ada";
+int age = 36;
+double height = 1.68;
+bool isAdmin = false;
+var city = "London";
+const int MaxUsers = 100;
+Console.WriteLine($"{name} is {age} years old");
+@@ csharp conditionals
+?? C# style puts each opening brace on its own line. Switch expressions use `=>` arms and `_` as the catch-all.
+int score = 87;
+string grade;
+if (score >= 90)
+{
+    grade = "A";
+}
+else
+{
+    grade = score >= 80 ? "B" : "C";
+}
+string level = score switch
+{
+    > 80 => "high",
+    _ => "low"
+};
+@@ csharp loops
+?? `foreach` visits every item in a collection; `for` gives you an index.
+for (int i = 0; i < 3; i++)
+{
+    Console.WriteLine(i);
+}
+
+string[] fruits = { "apple", "kiwi", "plum" };
+foreach (string fruit in fruits)
+{
+    Console.WriteLine(fruit);
+}
+@@ csharp functions
+?? Methods state their return type first and use PascalCase names. Optional parameters take defaults, and `=>` writes a one-line method body.
+static string Greet(string name, string greeting = "Hello")
+{
+    return $"{greeting}, {name}!";
+}
+
+static int Add(int a, int b) => a + b;
+
+Console.WriteLine(Greet("Grace"));
+@@ csharp classes
+?? Properties with `{ get; set; }` replace hand-written getters and setters. `private set` lets only the class change the value.
+public class Account
+{
+    public string Owner { get; }
+    public decimal Balance { get; private set; }
+
+    public Account(string owner)
+    {
+        Owner = owner;
+    }
+
+    public decimal Deposit(decimal amount)
+    {
+        Balance += amount;
+        return Balance;
+    }
+}
+@@ csharp collections
+?? `List<T>` grows as needed and `Dictionary<TKey, TValue>` maps keys to values. `TryGetValue` looks up a key without throwing.
+var nums = new List<int> { 3, 1, 4 };
+nums.Add(9);
+var ages = new Dictionary<string, int>
+{
+    ["ada"] = 36,
+    ["alan"] = 41
+};
+if (ages.TryGetValue("ada", out int age))
+{
+    Console.WriteLine(age);
+}
+@@ csharp errors
+?? Catch specific exception types before general ones. The exception object carries a `Message`, and `finally` always runs.
+try
+{
+    int value = int.Parse("42x");
+    Console.WriteLine(10 / value);
+}
+catch (FormatException ex)
+{
+    Console.WriteLine($"Bad input: {ex.Message}");
+}
+finally
+{
+    Console.WriteLine("Done");
+}
+@@ csharp lambdas
+?? LINQ methods like `Where`, `OrderBy` and `Select` take lambdas written `x => expression`. `Func<int, int>` is the type of a function from int to int.
+var names = new List<string> { "Ada", "Alan", "Grace" };
+var result = names
+    .Where(n => n.Length > 3)
+    .OrderBy(n => n)
+    .Select(n => n.ToUpper())
+    .ToList();
+Func<int, int> square = x => x * x;
+@@ cpp variables
+?? `#include` pulls in headers, `std::` is the standard library namespace, and `auto` deduces a type from its value.
+#include <iostream>
+#include <string>
+
+int main() {
+    std::string name = "Ada";
+    int age = 36;
+    auto height = 1.68;
+    std::cout << name << " is " << age << "\n";
+    return 0;
+}
+@@ cpp conditionals
+?? Same brace syntax as C. Character literals use single quotes like `'A'`; strings use double quotes.
+int score = 87;
+char grade;
+if (score >= 90) {
+    grade = 'A';
+} else if (score >= 80) {
+    grade = 'B';
+} else {
+    grade = 'C';
+}
+std::string result = score >= 60 ? "pass" : "fail";
+@@ cpp loops
+?? The range-based `for (const auto& x : items)` reads each element without copying it. `++i` is the idiomatic increment.
+for (int i = 0; i < 3; ++i) {
+    std::cout << i << "\n";
+}
+
+std::vector<std::string> fruits = {"apple", "kiwi", "plum"};
+for (const auto& fruit : fruits) {
+    std::cout << fruit << "\n";
+}
+@@ cpp functions
+?? Pass large objects by `const&` to avoid copying them. Functions must be declared before they're called.
+std::string greet(const std::string& name) {
+    return "Hello, " + name + "!";
+}
+
+int add(int a, int b = 0) {
+    return a + b;
+}
+
+int main() {
+    std::cout << greet("Grace") << add(2, 3);
+}
+@@ cpp classes
+?? Class members are `private` unless marked otherwise. The initializer list after `:` sets fields before the constructor body runs. Don't forget the `;` after the closing brace.
+class Account {
+public:
+    explicit Account(std::string owner)
+        : owner_(std::move(owner)), balance_(0.0) {}
+
+    double deposit(double amount) {
+        balance_ += amount;
+        return balance_;
+    }
+
+private:
+    std::string owner_;
+    double balance_;
+};
+@@ cpp collections
+?? `std::vector` is the go-to growable array and `std::unordered_map` is a hash map. `auto& [k, v]` unpacks each pair (C++17).
+std::vector<int> nums = {3, 1, 4};
+nums.push_back(9);
+std::unordered_map<std::string, int> ages;
+ages["ada"] = 36;
+ages.insert({"alan", 41});
+for (const auto& [name, age] : ages) {
+    std::cout << name << ": " << age << "\n";
+}
+@@ cpp errors
+?? Throw by value and catch by `const&`. Every standard exception has a `what()` message.
+double divide(double a, double b) {
+    if (b == 0) {
+        throw std::invalid_argument("divide by zero");
+    }
+    return a / b;
+}
+
+try {
+    divide(10, 0);
+} catch (const std::exception& e) {
+    std::cerr << e.what() << "\n";
+}
+@@ cpp lambdas
+?? A lambda is `[capture](params) { body }`. The brackets list outside variables it may use. Algorithms like `std::sort` accept lambdas.
+std::vector<int> nums = {5, 2, 8, 1};
+int limit = 3;
+std::sort(nums.begin(), nums.end(), [](int a, int b) { return a > b; });
+auto count = std::count_if(nums.begin(), nums.end(),
+    [limit](int n) { return n > limit; });
+@@ go variables
+?? `:=` declares a variable and infers its type in one step, but only inside functions. `var` and `const` work anywhere.
+var name string = "Ada"
+age := 36
+height := 1.68
+const maxUsers = 100
+fmt.Printf("%s is %d, %.2fm\n", name, age, height)
+@@ go conditionals
+?? No parentheses around conditions, but braces are required. An `if` can run a short statement first, separated by `;`.
+score := 87
+var grade string
+if score >= 90 {
+    grade = "A"
+} else if score >= 80 {
+    grade = "B"
+} else {
+    grade = "C"
+}
+if n, err := strconv.Atoi("42"); err == nil {
+    fmt.Println(n, grade)
+}
+@@ go loops
+?? `for` is Go's only loop keyword. `range` yields an index and a value; use `_` to ignore one.
+for i := 0; i < 3; i++ {
+    fmt.Println(i)
+}
+
+fruits := []string{"apple", "kiwi", "plum"}
+for _, fruit := range fruits {
+    fmt.Println(fruit)
+}
+@@ go functions
+?? Types come after names, and `(a, b int)` shares one type. Functions can return several values at once.
+func greet(name string) string {
+    return "Hello, " + name + "!"
+}
+
+func minMax(a, b int) (int, int) {
+    if a < b {
+        return a, b
+    }
+    return b, a
+}
+@@ go classes
+?? Go has no classes. A `struct` holds data, and methods attach to it through a receiver like `(a *Account)`. Capitalized names are exported.
+type Account struct {
+    Owner string
+    Balance float64
+}
+
+func (a *Account) Deposit(amount float64) float64 {
+    a.Balance += amount
+    return a.Balance
+}
+
+acct := &Account{Owner: "Ada"}
+acct.Deposit(50)
+@@ go collections
+?? Slices grow with `append`. The two-value map lookup `v, ok := m[k]` tells you whether the key exists.
+nums := []int{3, 1, 4}
+nums = append(nums, 9)
+ages := map[string]int{"ada": 36}
+ages["alan"] = 41
+if age, ok := ages["ada"]; ok {
+    fmt.Println(age)
+}
+delete(ages, "alan")
+@@ go errors
+?? Go returns errors as values instead of throwing them. Check `err != nil` right after each call, and wrap errors with `%w`.
+func parseAge(s string) (int, error) {
+    age, err := strconv.Atoi(s)
+    if err != nil {
+        return 0, fmt.Errorf("invalid age %q: %w", s, err)
+    }
+    return age, nil
+}
+
+age, err := parseAge("abc")
+if err != nil {
+    log.Println(err)
+}
+@@ go lambdas
+?? Functions are values. A parameter of type `func(int) int` accepts any matching function, including an anonymous one written inline.
+func apply(nums []int, f func(int) int) []int {
+    out := make([]int, 0, len(nums))
+    for _, n := range nums {
+        out = append(out, f(n))
+    }
+    return out
+}
+
+doubled := apply([]int{1, 2, 3}, func(n int) int { return n * 2 })
+</script>
+
+<script>
+(() => {
+  const LANGS = [
+    { id: "python", name: "Python", ext: "py", comment: "#" },
+    { id: "javascript", name: "JavaScript", ext: "js", comment: "//" },
+    { id: "java", name: "Java", ext: "java", comment: "//" },
+    { id: "csharp", name: "C#", ext: "cs", comment: "//" },
+    { id: "cpp", name: "C++", ext: "cpp", comment: "//" },
+    { id: "go", name: "Go", ext: "go", comment: "//" },
+  ];
+  const TOPICS = [
+    { id: "variables", name: "Variables & Types", short: "Vars", file: "variables" },
+    { id: "conditionals", name: "If / Else", short: "If/Else", file: "conditionals" },
+    { id: "loops", name: "Loops", short: "Loops", file: "loops" },
+    { id: "functions", name: "Functions", short: "Funcs", file: "functions" },
+    { id: "classes", name: "Classes & Structs", short: "Classes", file: "account" },
+    { id: "collections", name: "Lists & Maps", short: "Lists/Maps", file: "collections" },
+    { id: "errors", name: "Error Handling", short: "Errors", file: "errors" },
+    { id: "lambdas", name: "Lambdas & Higher-Order", short: "Lambdas", file: "functional" },
+  ];
+  const RIVALS = [
+    [["Intern", 15], ["Junior", 25], ["Mid-level", 35]],
+    [["Junior", 30], ["Mid-level", 45], ["Senior", 60]],
+    [["Senior", 50], ["Staff", 70], ["Compiler", 90]],
+  ];
+  const KW = {
+    python: "def class if elif else for in while return import from as try except finally raise with lambda and or not is None True False pass break continue yield self",
+    javascript: "const let var function return if else for of in while class new this throw try catch finally async await import export default null undefined true false typeof extends",
+    java: "public private protected static final void class new return if else for while try catch finally throw throws int double boolean char var import extends implements this null true false switch case default",
+    csharp: "public private protected static void class new return if else for foreach in while try catch finally throw string int double bool decimal var const get set using null true false switch out this",
+    cpp: "int double char bool auto const return if else for while class public private protected struct void true false try catch throw explicit",
+    go: "func var const type struct return if else for range package import map make append nil true false string int float64 error delete len defer go chan",
+  };
+  const BUILTIN = {
+    python: "print range len enumerate int str float bool list dict sorted map filter input",
+  };
+
+  // ---------- Parse snippets ----------
+  const SNIPS = {};
+  document.getElementById("snippets").textContent.split(/^@@ /m).forEach(block => {
+    if (!block.trim()) return;
+    const lines = block.split("\n");
+    const [lang, topic] = lines.shift().trim().split(/\s+/);
+    let tip = "";
+    if (lines[0] && lines[0].startsWith("?? ")) tip = lines.shift().slice(3);
+    const code = lines.map(l => l.replace(/\s+$/, "")).join("\n").replace(/^\n+/, "").replace(/\s+$/, "");
+    SNIPS[lang + ":" + topic] = { code, tip };
+  });
+
+  // ---------- Storage ----------
+  const KEY = "syntax-sprint.v1";
+  let saved = { best: {}, lang: "python", topic: 0, diff: 1 };
+  try { const raw = localStorage.getItem(KEY); if (raw) saved = Object.assign(saved, JSON.parse(raw)); } catch (e) {}
+  const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} };
+
+  // ---------- DOM ----------
+  const $ = id => document.getElementById(id);
+  const els = {
+    langs: $("langs"), topic: $("topic"), diff: $("diff"), lanes: $("lanes"), trackTitle: $("trackTitle"),
+    tip: $("tip"), code: $("code"), gutter: $("gutter"), codeBody: $("codeBody"), ghost: $("ghost"), editor: $("editor"),
+    veil: $("veil"), startBtn: $("startBtn"), fileName: $("fileName"), editorHint: $("editorHint"),
+    sWpm: $("sWpm"), sAcc: $("sAcc"), sTime: $("sTime"), sErr: $("sErr"), sBest: $("sBest"),
+    results: $("results"), place: $("place"), rWpm: $("rWpm"), rAcc: $("rAcc"), rTime: $("rTime"),
+    retryBtn: $("retryBtn"), nextBtn: $("nextBtn"), board: $("board"),
+    l: [$("l1"), $("l2"), $("l3")], lightsLabel: $("lightsLabel"),
+  };
+
+  let langIdx = Math.max(0, LANGS.findIndex(l => l.id === saved.lang));
+  let topicIdx = Math.min(TOPICS.length - 1, Math.max(0, saved.topic | 0));
+  els.diff.value = String(saved.diff ?? 1);
+
+  const S = {
+    phase: "idle", // idle | countdown | racing | done
+    target: "", typed: "", base: [], spans: [], indent: [], indentBefore: [], eff: 1,
+    keys: 0, good: 0, errors: 0, start: 0, end: 0, raf: 0, timers: [], bots: [],
+  };
+
+  const escapeHtml = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const fmtTip = t => escapeHtml(t).replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  // ---------- Highlighter ----------
+  function highlight(code, lang) {
+    const cls = new Array(code.length).fill("t-p");
+    const kw = new Set(KW[lang].split(" "));
+    const bi = new Set((BUILTIN[lang] || "").split(" ").filter(Boolean));
+    const com = lang === "python" ? "#[^\\n]*" : "\\/\\/[^\\n]*";
+    const pre = lang === "cpp" ? "|(#\\w+)" : "|(\\b\\B)";
+    const re = new RegExp("(" + com + ")" + pre + "|(\"(?:\\\\.|[^\"\\\\\\n])*\"|'(?:\\\\.|[^'\\\\\\n])*'|`[^`]*`)|(\\b\\d+(?:\\.\\d+)?\\b)|([A-Za-z_]\\w*)", "g");
+    let m;
+    const paint = (s, e, c) => { for (let i = s; i < e; i++) cls[i] = c; };
+    while ((m = re.exec(code))) {
+      const s = m.index, e = s + m[0].length;
+      if (m[1]) paint(s, e, "t-com");
+      else if (m[2]) paint(s, e, "t-kw");
+      else if (m[3]) paint(s, e, "t-str");
+      else if (m[4]) paint(s, e, "t-num");
+      else if (m[5]) {
+        const w = m[5];
+        if (kw.has(w)) paint(s, e, "t-kw");
+        else if (code[e] === "(" || bi.has(w)) paint(s, e, "t-fn");
+        else if (/^[A-Z]/.test(w)) paint(s, e, "t-type");
+      }
+    }
+    return cls;
+  }
+
+  // ---------- Build UI ----------
+  function buildLangs() {
+    els.langs.innerHTML = "";
+    LANGS.forEach((l, i) => {
+      const b = document.createElement("button");
+      b.className = "lang-btn"; b.textContent = l.name; b.id = "lang-" + l.id;
+      b.setAttribute("aria-pressed", String(i === langIdx));
+      b.addEventListener("click", () => { langIdx = i; load(); });
+      els.langs.appendChild(b);
+    });
+  }
+  function buildTopics() {
+    const lang = LANGS[langIdx].id;
+    els.topic.innerHTML = TOPICS.map((t, i) => {
+      const best = saved.best?.[lang]?.[t.id];
+      return `<option value="${i}">${i + 1}. ${t.name}${best ? "  ✓ " + best + " wpm" : ""}</option>`;
+    }).join("");
+    els.topic.value = String(topicIdx);
+  }
+  function buildBoard() {
+    const head = "<thead><tr><th></th>" + TOPICS.map(t => `<th scope="col">${t.short}</th>`).join("") + "</tr></thead>";
+    const body = "<tbody>" + LANGS.map((l, li) => "<tr><th scope=\"row\">" + l.name + "</th>" + TOPICS.map((t, ti) => {
+      const best = saved.best?.[l.id]?.[t.id];
+      const here = li === langIdx && ti === topicIdx;
+      return `<td><button class="cell${best ? " done" : ""}${here ? " here" : ""}" data-l="${li}" data-t="${ti}" aria-label="${l.name} ${t.name}${best ? ", best " + best + " wpm" : ""}">${best ? best : "·"}</button></td>`;
+    }).join("") + "</tr>").join("") + "</tbody>";
+    els.board.innerHTML = head + body;
+  }
+  els.board.addEventListener("click", e => {
+    const b = e.target.closest(".cell"); if (!b) return;
+    langIdx = +b.dataset.l; topicIdx = +b.dataset.t; load();
+    els.editor.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  function buildLanes() {
+    const r = RIVALS[+els.diff.value];
+    S.bots = r.map(([name, wpm]) => ({ name, wpm }));
+    const lanes = [{ name: "You", sub: "driver", you: true }].concat(S.bots.map(b => ({ name: b.name, sub: b.wpm + " wpm" })));
+    els.lanes.innerHTML = lanes.map((l, i) => `
+      <div class="lane">
+        <div class="lane-name">${l.name}<small>${l.sub}</small></div>
+        <div class="road"><div class="car${l.you ? " you" : ""}" id="car${i}">${l.you ? "&gt;_" : l.name[0]}</div></div>
+        <div class="lane-wpm" id="lw${i}">${l.you ? "0" : l.sub.split(" ")[0]}</div>
+      </div>`).join("");
+  }
+
+  function renderCode() {
+    const lang = LANGS[langIdx].id;
+    const code = S.target;
+    S.base = highlight(code, lang);
+    S.indent = new Array(code.length).fill(false);
+    let lineStart = true;
+    for (let i = 0; i < code.length; i++) {
+      if (code[i] === "\n") { lineStart = true; continue; }
+      if (lineStart && code[i] === " ") S.indent[i] = true; else lineStart = false;
+    }
+    S.indentBefore = new Array(code.length + 1).fill(0);
+    for (let i = 0; i < code.length; i++) S.indentBefore[i + 1] = S.indentBefore[i] + (S.indent[i] ? 1 : 0);
+    S.eff = Math.max(1, code.length - S.indentBefore[code.length]);
+
+    const frag = document.createDocumentFragment();
+    S.spans = [];
+    for (let i = 0; i < code.length; i++) {
+      const sp = document.createElement("span");
+      if (code[i] === "\n") {
+        sp.textContent = "↵"; sp.dataset.nl = "1";
+        frag.appendChild(sp); frag.appendChild(document.createTextNode("\n"));
+      } else { sp.textContent = code[i]; frag.appendChild(sp); }
+      S.spans.push(sp);
+    }
+    // trailing cursor slot for end of file
+    const end = document.createElement("span"); end.textContent = " "; end.dataset.end = "1";
+    frag.appendChild(end); S.spans.push(end);
+    els.code.innerHTML = ""; els.code.appendChild(frag);
+    els.gutter.textContent = code.split("\n").map((_, i) => i + 1).join("\n");
+    paintCode();
+  }
+
+  function correctLen() {
+    const t = S.typed, g = S.target; let i = 0;
+    while (i < t.length && t[i] === g[i]) i++;
+    return i;
+  }
+
+  function paintCode() {
+    const cl = correctLen(), tl = S.typed.length, showCur = S.phase === "racing";
+    for (let i = 0; i < S.spans.length; i++) {
+      const sp = S.spans[i];
+      let c = "c " + (sp.dataset.end ? "t-p" : S.base[i]);
+      if (sp.dataset.nl) c += " nl";
+      if (S.indent[i]) c += " ind";
+      if (S.phase === "done" || i < cl) c += " ok";
+      else if (i < tl) c += " bad";
+      if (showCur && i === tl) c += " cur";
+      sp.className = c;
+    }
+    if (showCur) keepCursorVisible(S.spans[tl]);
+  }
+  function keepCursorVisible(sp) {
+    if (!sp) return;
+    const box = els.codeBody, left = sp.offsetLeft, w = box.clientWidth;
+    if (left < box.scrollLeft + 40) box.scrollLeft = Math.max(0, left - 60);
+    else if (left > box.scrollLeft + w - 60) box.scrollLeft = left - w + 120;
+  }
+
+  // ---------- Load / reset ----------
+  function load() {
+    stopTimers();
+    saved.lang = LANGS[langIdx].id; saved.topic = topicIdx; saved.diff = +els.diff.value; persist();
+    const lang = LANGS[langIdx], topic = TOPICS[topicIdx];
+    const snip = SNIPS[lang.id + ":" + topic.id];
+    S.target = snip.code; S.typed = ""; S.keys = 0; S.good = 0; S.errors = 0; S.start = 0; S.end = 0;
+    S.phase = "idle";
+    [...els.langs.children].forEach((b, i) => b.setAttribute("aria-pressed", String(i === langIdx)));
+    buildTopics(); buildBoard(); buildLanes();
+    els.tip.innerHTML = fmtTip(snip.tip);
+    els.trackTitle.innerHTML = `Lap ${topicIdx + 1}/${TOPICS.length} · <b>${lang.name}</b> · ${topic.name}`;
+    els.fileName.textContent = topic.file + "." + lang.ext;
+    const best = saved.best?.[lang.id]?.[topic.id];
+    els.sBest.textContent = best ? best : "—";
+    els.results.hidden = true;
+    els.veil.hidden = false;
+    els.veil.querySelector(".veil-inner").innerHTML = `<button class="start-btn" id="startBtn"><span>Start race</span></button><small>or press Enter</small>`;
+    $("startBtn").addEventListener("click", startCountdown);
+    els.codeBody.scrollLeft = 0;
+    setLights(0, "READY");
+    renderCode(); updateStats(0); moveCars(0);
+  }
+
+  function stopTimers() {
+    S.timers.forEach(clearTimeout); S.timers = [];
+    cancelAnimationFrame(S.raf);
+  }
+
+  function setLights(n, label, go) {
+    els.l.forEach((l, i) => { l.className = "light" + (go ? " green" : i < n ? " red" : ""); });
+    els.lightsLabel.textContent = label;
+    els.lightsLabel.style.color = go ? "var(--good)" : "";
+  }
+
+  function startCountdown() {
+    if (S.phase === "countdown" || S.phase === "racing") return;
+    if (S.phase === "done") { load(); }
+    S.phase = "countdown";
+    els.veil.hidden = true;
+    els.results.hidden = true;
+    focusGhost();
+    const step = 550;
+    setLights(1, "3");
+    S.timers.push(setTimeout(() => setLights(2, "2"), step));
+    S.timers.push(setTimeout(() => setLights(3, "1"), step * 2));
+    S.timers.push(setTimeout(() => {
+      setLights(3, "GO", true);
+      S.phase = "racing"; S.start = performance.now();
+      paintCode(); focusGhost(); tick();
+    }, step * 3));
+  }
+
+  // ---------- Race loop ----------
+  function elapsed() { return S.phase === "racing" ? (performance.now() - S.start) / 1000 : (S.end - S.start) / 1000; }
+  function playerEffChars() { const cl = correctLen(); return cl - S.indentBefore[cl]; }
+
+  function moveCars(t) {
+    const you = S.phase === "done" ? 1 : playerEffChars() / S.eff;
+    place(0, you);
+    S.bots.forEach((b, i) => place(i + 1, Math.min(1, (t / 60) * b.wpm * 5 / S.eff)));
+  }
+  function place(i, p) {
+    const car = $("car" + i); if (!car) return;
+    const road = car.parentElement;
+    const max = road.clientWidth - car.offsetWidth - 14;
+    car.style.transform = `translateX(${Math.max(0, p * max)}px)`;
+  }
+  function updateStats(t) {
+    const wpm = t > 0.5 ? Math.round((playerEffChars() / 5) / (t / 60)) : 0;
+    els.sWpm.textContent = wpm;
+    els.sAcc.textContent = (S.keys ? Math.round((S.good / S.keys) * 100) : 100) + "%";
+    els.sTime.textContent = t.toFixed(1) + "s";
+    els.sErr.textContent = S.errors;
+    const lw = $("lw0"); if (lw) lw.textContent = wpm;
+  }
+  function tick() {
+    if (S.phase !== "racing") return;
+    const t = elapsed();
+    moveCars(t); updateStats(t);
+    S.raf = requestAnimationFrame(tick);
+  }
+
+  // ---------- Typing ----------
+  function flashBlocked() {
+    els.editor.classList.remove("shake"); void els.editor.offsetWidth; els.editor.classList.add("shake");
+  }
+  function insert(ch) {
+    if (S.phase !== "racing") return;
+    if (S.typed.length >= S.target.length) return;
+    const cl = correctLen();
+    if (S.typed.length - cl >= 8) { flashBlocked(); return; }
+    S.keys++;
+    const pos = S.typed.length;
+    const right = cl === pos && S.target[pos] === ch;
+    if (right) S.good++; else S.errors++;
+    S.typed += ch;
+    if (right && ch === "\n") autoIndent();
+    afterChange();
+  }
+  function autoIndent() {
+    while (S.typed.length < S.target.length && S.indent[S.typed.length] && correctLen() === S.typed.length) S.typed += " ";
+  }
+  function fillIndent() {
+    if (S.phase !== "racing") return;
+    const pos = S.typed.length;
+    if (correctLen() !== pos || S.target[pos] !== " ") { flashBlocked(); return; }
+    while (S.typed.length < S.target.length && S.target[S.typed.length] === " ") S.typed += " ";
+    afterChange();
+  }
+  function backspace() {
+    if (S.phase !== "racing" || !S.typed.length) return;
+    let t = S.typed;
+    // If the cursor sits right after auto-filled indentation, remove it along with the line break.
+    const lineStart = t.lastIndexOf("\n") + 1;
+    if (t.length > lineStart && /^ +$/.test(t.slice(lineStart)) && S.indent[t.length - 1]) t = t.slice(0, lineStart - (lineStart > 0 ? 1 : 0));
+    else t = t.slice(0, -1);
+    S.typed = t;
+    afterChange();
+  }
+  function afterChange() {
+    paintCode();
+    if (S.typed === S.target) finish();
+  }
+
+  function finish() {
+    S.phase = "done"; S.end = performance.now();
+    cancelAnimationFrame(S.raf);
+    const t = elapsed();
+    const wpm = Math.round((S.eff / 5) / (t / 60));
+    const acc = S.keys ? Math.round((S.good / S.keys) * 100) : 100;
+    const lang = LANGS[langIdx].id, topic = TOPICS[topicIdx].id;
+    saved.best[lang] = saved.best[lang] || {};
+    const prev = saved.best[lang][topic] || 0;
+    const pb = wpm > prev;
+    if (pb) { saved.best[lang][topic] = wpm; persist(); }
+    const beaten = S.bots.filter(b => (S.eff / (b.wpm * 5)) * 60 < t).length;
+    const pos = beaten + 1;
+    const ord = ["1st", "2nd", "3rd", "4th"][pos - 1];
+    paintCode(); moveCars(t); updateStats(t);
+    setLights(3, "FINISH", true);
+    els.place.className = "place" + (pos === 1 ? " p1" : "");
+    els.place.innerHTML = `${ord} place<small>${pb ? '<span class="pb">New personal best</span>' : "Best here: " + prev + " wpm"}</small>`;
+    els.rWpm.textContent = wpm; els.rAcc.textContent = acc + "%"; els.rTime.textContent = t.toFixed(1) + "s";
+    els.sBest.textContent = saved.best[lang][topic];
+    const nextIdx = (topicIdx + 1) % TOPICS.length;
+    const nextLang = topicIdx + 1 >= TOPICS.length ? LANGS[(langIdx + 1) % LANGS.length].name + " · " : "";
+    els.nextBtn.textContent = "Next: " + nextLang + TOPICS[nextIdx].name + " →";
+    els.results.hidden = false;
+    buildTopics(); buildBoard();
+    els.ghost.blur();
+  }
+  function next() {
+    topicIdx++;
+    if (topicIdx >= TOPICS.length) { topicIdx = 0; langIdx = (langIdx + 1) % LANGS.length; }
+    load(); startCountdown();
+  }
+
+  // ---------- Input plumbing ----------
+  function focusGhost() { try { els.ghost.focus({ preventScroll: true }); } catch (e) { els.ghost.focus(); } }
+  els.editor.addEventListener("mousedown", e => { if (S.phase === "racing" || S.phase === "countdown") { e.preventDefault(); focusGhost(); } });
+  els.ghost.addEventListener("focus", () => els.editor.classList.add("focused"));
+  els.ghost.addEventListener("blur", () => {
+    els.editor.classList.remove("focused");
+    if (S.phase === "racing") els.editorHint.textContent = "Click the code to keep typing.";
+  });
+  els.ghost.addEventListener("focus", () => { els.editorHint.textContent = "Type exactly what you see. Indentation fills itself after Enter."; });
+
+  els.ghost.addEventListener("keydown", e => {
+    if (e.key === "Tab") { e.preventDefault(); fillIndent(); }
+    else if (e.key === "Escape") { e.preventDefault(); load(); }
+    else if (e.key === "Backspace") { e.preventDefault(); backspace(); }
+    else if (e.key === "Enter") { e.preventDefault(); if (S.phase === "racing") insert("\n"); }
+  });
+  els.ghost.addEventListener("beforeinput", e => {
+    const tp = e.inputType;
+    if (tp === "insertText" && e.data) { e.preventDefault(); for (const ch of e.data) insert(ch); }
+    else if (tp === "insertLineBreak" || tp === "insertParagraph") { e.preventDefault(); insert("\n"); }
+    else if (tp === "deleteContentBackward") { e.preventDefault(); backspace(); }
+  });
+  els.ghost.addEventListener("input", () => {
+    const v = els.ghost.value; if (!v) return;
+    els.ghost.value = "";
+    for (const ch of v) insert(ch === "\r" ? "\n" : ch);
+  });
+  els.ghost.addEventListener("paste", e => e.preventDefault());
+
+  document.addEventListener("keydown", e => {
+    const tag = (e.target.tagName || "").toUpperCase();
+    if (e.target === els.ghost) return;
+    if (e.key === "Enter" && tag !== "BUTTON" && tag !== "SELECT") {
+      if (S.phase === "idle") { e.preventDefault(); startCountdown(); }
+      else if (S.phase === "done") { e.preventDefault(); next(); }
+    }
+    if (e.key === "Escape" && S.phase !== "idle") { e.preventDefault(); load(); }
+  });
+
+  els.topic.addEventListener("change", () => { topicIdx = +els.topic.value; load(); });
+  els.diff.addEventListener("change", () => load());
+  els.retryBtn.addEventListener("click", () => { load(); startCountdown(); });
+  els.nextBtn.addEventListener("click", next);
+  window.addEventListener("resize", () => moveCars(S.start ? elapsed() : 0));
+
+  buildLangs();
+  load();
+})();
+</script>
+
+</body>
+</html>
